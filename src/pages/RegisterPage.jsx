@@ -1,14 +1,21 @@
-import { Link } from "react-router";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router";
 import { useForm } from "../hooks/useForm";
 
 export const RegisterPage = () => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState([]);
+
   const {
     first_name,
     last_name,
     username,
     email,
     password,
+    formState,
     handleInputChange,
+    handleReset,
   } = useForm({
     first_name: "",
     last_name: "",
@@ -17,8 +24,42 @@ export const RegisterPage = () => {
     password: "",
   });
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setIsLoading(true);
+    setErrors([]);
+
+    try {
+      const response = await fetch("http://localhost:6767/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(formState),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        handleReset();
+        navigate("/login", {
+          state: {
+            message: "Cuenta creada con éxito. Ya podés iniciar sesión.",
+          },
+        });
+        return;
+      }
+
+      if (response.status === 400) {
+        // errores de validacion de express-validator
+        setErrors(data);
+      } else {
+        setErrors(["Ocurrió un error en el servidor. Intentá más tarde."]);
+      }
+    } catch {
+      setErrors(["No se pudo conectar con el servidor."]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -94,11 +135,20 @@ export const RegisterPage = () => {
             </span>
           </label>
 
+          {errors.length > 0 && (
+            <ul className="bg-red-100 text-red-700 text-sm rounded-lg p-3 list-disc pl-6">
+              {errors.map((message) => (
+                <li key={message}>{message}</li>
+              ))}
+            </ul>
+          )}
+
           <button
             type="submit"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-lg transition-colors"
+            disabled={isLoading}
+            className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-semibold py-2 rounded-lg transition-colors"
           >
-            Registrarme
+            {isLoading ? "Registrando..." : "Registrarme"}
           </button>
         </form>
 

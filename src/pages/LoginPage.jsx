@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useForm } from "../hooks/useForm";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  // mensaje de exito que llega desde RegisterPage
+  const successMessage = location.state?.message;
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState([]);
 
@@ -55,6 +58,12 @@ export const LoginPage = () => {
         <h1 className="text-2xl font-bold text-slate-800 text-center mb-6">
           Iniciar sesión
         </h1>
+
+        {successMessage && (
+          <p className="bg-emerald-100 text-emerald-700 text-sm rounded-lg p-3 mb-4">
+            {successMessage}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
